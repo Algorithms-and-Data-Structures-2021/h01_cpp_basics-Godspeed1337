@@ -7,6 +7,14 @@
 ResizeStorageStatus resize_storage(Book *&storage, int size, int new_capacity) {
   // здесь мог бы быть ваш разносторонний и многогранный код ...
   // Tip 1: проведите валидацию аргументов функции
+  if (storage == nullptr) return ResizeStorageStatus::NULL_STORAGE;
+  if (new_capacity <= size) return ResizeStorageStatus::INSUFFICIENT_CAPACITY;
+  if (size < 0) return ResizeStorageStatus::NEGATIVE_SIZE;
+  Book *temp = new Book[new_capacity]{};
+
+  std::copy(storage, storage + size, temp);
+  delete []storage;
+  storage = temp;
   // Tip 2: не забудьте высвободить ранее выделенную память под хранилище
   return ResizeStorageStatus::SUCCESS;
 }
@@ -17,12 +25,19 @@ BookStore::BookStore(const std::string &name) : name_{name} {
   if (name.empty()) {
     throw std::invalid_argument("BookStore::name must not be empty");
   }
-
+  name_ = name;
+  storage_capacity_ = kInitStorageCapacity;
+  storage_ = new Book[storage_capacity_]{};
   // здесь мог бы быть ваш сотрясающий землю и выделяющий память код ...
 }
 
 // 3. реализуйте деструктор ...
 BookStore::~BookStore() {
+  delete[] storage_;
+  storage_ = nullptr;
+
+  storage_size_ = 0;
+  storage_capacity_ = 0;
   // здесь мог бы быть ваш высвобождающий разум от негатива код ...
   // Tip 1: я свободен ..., словно память в куче: не забудьте обнулить указатель
 }
@@ -33,8 +48,16 @@ void BookStore::AddBook(const Book &book) {
     // здесь мог бы быть ваш умопомрачительный код ...
     // Tip 1: используйте функцию resize_storage_internal, задав новый размер хранилища
     // Tip 2: не забудьте обработать статус вызова функции
+    if (resize_storage_internal(storage_size_ + kCapacityCoefficient) == ResizeStorageStatus::SUCCESS){
+      storage_[storage_size_] = book;
+      storage_size_ += 1;
+    }
   }
   // Tip 3: не забудьте добавить книгу в наше бездонное хранилище ...
+  else {
+    storage_[storage_size_] = book;
+    storage_size_ += 1;
+  }
 }
 
 // РЕАЛИЗОВАНО
